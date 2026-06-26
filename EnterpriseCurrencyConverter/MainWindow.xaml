@@ -1,0 +1,123 @@
+﻿<Window x:Class="EnterpriseCurrencyConverter.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:conv="clr-namespace:EnterpriseCurrencyConverter.Converters"
+        Title="{Binding AppTitle}"
+        Height="500" Width="450"
+        WindowStartupLocation="CenterScreen">
+
+    <!-- RESOURCES: Register converter so XAML bindings can use it -->
+    <Window.Resources>
+        <conv:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+    </Window.Resources>
+
+    <!--
+        ROOT PANEL: StackPanel stacks children top-to-bottom.
+        Margin = spacing from window edges (left, top, right, bottom).
+    -->
+    <StackPanel Margin="20">
+
+        <!-- APP TITLE -->
+        <!-- Text binds ONE-WAY to AppTitle property in ViewModel -->
+        <TextBlock Text="{Binding AppTitle}"
+                   FontSize="20"
+                   FontWeight="Bold"
+                   HorizontalAlignment="Center"
+                   Margin="0,0,0,20"/>
+
+        <!-- LANGUAGE SELECTOR -->
+        <TextBlock Text="{Binding LanguageLabelText}" Margin="0,0,0,4"/>
+        <!--
+            ItemsSource: fills dropdown from Languages collection in ViewModel
+            SelectedItem TwoWay: when user picks a language, SelectedLanguage
+            property in ViewModel is updated → triggers ApplyLanguage()
+        -->
+        <ComboBox ItemsSource="{Binding Languages}"
+                  SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}"
+                  Margin="0,0,0,16"
+                  Height="30"/>
+
+        <!-- AMOUNT INPUT -->
+        <TextBlock Text="{Binding AmountLabelText}" Margin="0,0,0,4"/>
+        <!--
+            Text TwoWay + PropertyChanged: every keystroke updates AmountInput in ViewModel.
+            Default binding updates only when TextBox loses focus — PropertyChanged is instant.
+        -->
+        <TextBox Text="{Binding AmountInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                 Height="30"
+                 Margin="0,0,0,16"/>
+
+        <!-- CURRENCY DROPDOWN -->
+        <TextBlock Text="{Binding SelectCurrencyLabelText}" Margin="0,0,0,4"/>
+        <!--
+            ItemsSource: fills from Currencies (ObservableCollection) in ViewModel
+            SelectedItem TwoWay: selected CurrencyRate object goes into SelectedCurrency in ViewModel
+            CurrencyRate.ToString() controls what text each item shows in the dropdown
+        -->
+        <ComboBox ItemsSource="{Binding Currencies}"
+                  SelectedItem="{Binding SelectedCurrency, Mode=TwoWay}"
+                  Height="30"
+                  Margin="0,0,0,16"/>
+
+        <!-- BUTTONS ROW -->
+        <!--
+            Grid with 2 columns to place buttons side by side.
+            Width="*" means "take all remaining space".
+            Width="10" is a fixed spacer column between buttons.
+        -->
+        <Grid Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!--
+                Command binding: Button does NOT use a Click event handler.
+                It binds to ConvertCommand in the ViewModel.
+                WPF automatically disables this button when CanExecute() returns false.
+            -->
+            <Button Grid.Column="0"
+                    Content="{Binding ConvertButtonText}"
+                    Command="{Binding ConvertCommand}"
+                    Height="35"/>
+
+            <Button Grid.Column="2"
+                    Content="{Binding ClearButtonText}"
+                    Command="{Binding ClearCommand}"
+                    Height="35"/>
+        </Grid>
+
+        <!-- ERROR MESSAGE (hidden by default, shown only when HasError = true) -->
+        <!--
+            Visibility uses BoolToVisibilityConverter:
+            HasError=true  → Visibility.Visible   (shown)
+            HasError=false → Visibility.Collapsed (hidden AND takes no space)
+        -->
+        <TextBlock Text="{Binding ErrorMessage}"
+                   Foreground="Red"
+                   TextWrapping="Wrap"
+                   Margin="0,0,0,12"
+                   Visibility="{Binding HasError, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+        <!-- RESULT PANEL (hidden until conversion is done) -->
+        <StackPanel Visibility="{Binding HasResult, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Separator Margin="0,0,0,12"/>
+            <TextBlock Text="{Binding ResultLabelText}"
+                       FontWeight="SemiBold"
+                       Margin="0,0,0,6"/>
+            <TextBlock Text="{Binding ResultText}"
+                       FontSize="16"
+                       FontWeight="Bold"
+                       Foreground="Green"
+                       TextWrapping="Wrap"/>
+        </StackPanel>
+
+        <!-- STATUS BAR at the bottom -->
+        <Separator Margin="0,16,0,8"/>
+        <TextBlock Text="{Binding StatusMessage}"
+                   Foreground="Gray"
+                   FontSize="11"/>
+
+    </StackPanel>
+</Window>
